@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 export default function ReviewPage() {
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082";
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState(null);
   const [error, setError] = React.useState("");
@@ -10,11 +12,30 @@ export default function ReviewPage() {
   const [reviewId, setReviewId] = React.useState(null);
   const [saved, setSaved] = React.useState([]);
 
+  async function fetchJson(path, { method = "GET", body } = {}) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 30000);
+    try {
+      const res = await fetch(`${API}${path}`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+      }
+      return await res.json();
+    } finally {
+      clearTimeout(id);
+    }
+  }
+
   const runStaged = async () => {
     setLoading(true); setError("");
     try {
-      const res = await fetch("http://localhost:8082/review/staged", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-      const data = await res.json();
+      const data = await fetchJson(`/review/staged`, { method: "POST", body: {} });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -25,8 +46,7 @@ export default function ReviewPage() {
   const runRepoSample = async () => {
     setLoading(true); setError("");
     try {
-      const res = await fetch("http://localhost:8082/review/repo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-      const data = await res.json();
+      const data = await fetchJson(`/review/repo`, { method: "POST", body: {} });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -38,8 +58,7 @@ export default function ReviewPage() {
     setLoading(true); setError("");
     try {
       const payloadFiles = await Promise.all(Array.from(files).map(async (f) => ({ path: f.name, content: await f.text() })));
-      const res = await fetch("http://localhost:8082/review/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files: payloadFiles, guidelines: guidelines || undefined }) });
-      const data = await res.json();
+      const data = await fetchJson(`/review/analyze`, { method: "POST", body: { files: payloadFiles, guidelines: guidelines || undefined } });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -50,8 +69,7 @@ export default function ReviewPage() {
   const loadLatestReviews = async () => {
     setError("");
     try {
-      const res = await fetch("http://localhost:8082/review/latest");
-      const data = await res.json();
+      const data = await fetchJson(`/review/latest`);
       setSaved(data.reviews || []);
     } catch (e) {
       setError(String(e?.message || e));
@@ -61,8 +79,7 @@ export default function ReviewPage() {
   const loadReviewById = async (id) => {
     setLoading(true); setError("");
     try {
-      const res = await fetch(`http://localhost:8082/review/${id}`);
-      const data = await res.json();
+      const data = await fetchJson(`/review/${id}`);
       setResult({ findings: data.findings || [], meta: data.meta || {} });
       setReviewId(id);
     } catch (e) {
@@ -93,7 +110,7 @@ export default function ReviewPage() {
         <div className="border rounded p-4">
           <h2 className="font-semibold">Custom files</h2>
           <p className="text-sm text-black">Drop files to analyze without git.</p>
-          <input type="file" multiple className="mt-3" onChange={(e) => runCustomFiles(e.target.files)} />
+          <input aria-label="Upload files for AI review" type="file" multiple className="mt-3" onChange={(e) => runCustomFiles(e.target.files)} />
         </div>
       </div>
 
@@ -104,7 +121,10 @@ export default function ReviewPage() {
           <ul className="mt-3 space-y-2 max-h-64 overflow-auto text-sm">
             {saved.map((r) => (
               <li key={r.id} className="flex items-center justify-between">
-                <button className="underline" onClick={() => loadReviewById(r.id)}>#{r.id} · {r.scope || 'n/a'}</button>
+                <div className="space-x-2">
+                  <button className="underline" onClick={() => loadReviewById(r.id)}>#{r.id} · {r.scope || 'n/a'}</button>
+                  <Link className="text-blue-600 underline" href={`/review/${r.id}`}>open</Link>
+                </div>
                 <span className="text-xs">{r.findings} findings</span>
               </li>
             ))}
