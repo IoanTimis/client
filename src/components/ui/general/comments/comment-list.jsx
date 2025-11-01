@@ -3,9 +3,7 @@
 import React from "react";
 import { objectAge } from "@/utils/objectAge";
 import { P } from "@/components/ui/general/primitives";
-import { TrashIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
-
-export default function CommentList({ comments = [], language = 'ro', t, onDelete, onEdit, currentUserId, resourceOwnerId }) {
+export default function CommentList({ comments = [], language = 'ro', t }) {
   if (!comments.length) {
     return (
       <div className="bg-stone-100 p-3 rounded-bl-lg rounded-br-lg">
@@ -28,24 +26,7 @@ export default function CommentList({ comments = [], language = 'ro', t, onDelet
                 {objectAge(comment, language)}
               </span>
             </div>
-            {(currentUserId && (currentUserId === comment.user_id || currentUserId === resourceOwnerId)) ? (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEdit?.(comment)}
-                  title={t?.('common.edit') || 'Editează'}
-                  className="text-blue-700 hover:text-blue-800 cursor-pointer"
-                >
-                  <PencilSquareIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => onDelete?.(comment)}
-                  title={t?.('common.delete') || 'Șterge'}
-                  className="text-red-700 hover:text-red-800 cursor-pointer"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </div>
-            ) : null}
+            {/* edit/delete buttons removed intentionally */}
           </div>
           <p className="text-gray-700 mt-1 whitespace-pre-wrap break-words">{comment.message}</p>
         </div>
