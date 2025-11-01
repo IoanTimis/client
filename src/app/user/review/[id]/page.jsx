@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api/api";
 import CommentInput from "@/components/ui/general/comments/comment-input";
 import CommentList from "@/components/ui/general/comments/comment-list";
+import { useLanguage } from "@/context/language-context";
 
 function severityRank(s) {
   return s === "error" ? 3 : s === "warn" ? 2 : 1;
@@ -14,6 +15,7 @@ function severityRank(s) {
 export default function ReviewDetailPage() {
   const router = useRouter();
   const { id } = useParams();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [data, setData] = React.useState(null);
@@ -90,40 +92,47 @@ export default function ReviewDetailPage() {
     return c;
   }, [data]);
 
+  function severityLabel(s) {
+    const sev = (s || 'info').toLowerCase();
+    if (sev === 'error') return t('review.detail.severity.error');
+    if (sev === 'warn') return t('review.detail.severity.warn');
+    return t('review.detail.severity.info');
+  }
+
   return (
     <div className="min-h-screen p-6 max-w-6xl mx-auto text-black">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Review #{id}</h1>
-        <Link className="text-blue-600 underline" href="/user/review">← Back to Reviews</Link>
+        <h1 className="text-2xl font-bold">{t('review.detail.title')} {id}</h1>
+        <Link className="text-blue-600 underline" href="/user/review">{t('review.detail.back')}</Link>
       </div>
 
-      {loading && <div className="mt-4">Loading…</div>}
+      {loading && <div className="mt-4">{t('common.loading')}</div>}
       {error && <div className="mt-4 text-red-600">{error}</div>}
 
       {data && (
         <>
           <div className="mt-4 text-sm text-black">
-            <div>Scope: <span className="font-mono">{data.scope || "n/a"}</span></div>
-            <div className="mt-1">Counts: <span className="text-red-700">error {counts.error}</span> · <span className="text-yellow-700">warn {counts.warn}</span> · <span className="text-gray-700">info {counts.info}</span></div>
+            <div>{t('review.detail.scope')}: <span className="font-mono">{data.scope || "n/a"}</span></div>
+            <div className="mt-1">{t('review.detail.counts')}: <span className="text-red-700">{t('review.detail.severity.error')} {counts.error}</span> · <span className="text-yellow-700">{t('review.detail.severity.warn')} {counts.warn}</span> · <span className="text-gray-700">{t('review.detail.severity.info')} {counts.info}</span></div>
           </div>
 
           <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="text-black">Sort by:</span>
+            <span className="text-black">{t('review.detail.sortBy')}</span>
             <select className="border rounded p-1" value={sortKey} onChange={(e) => setSortKey(e.target.value)}>
-              <option value="severity">Severity</option>
-              <option value="file">File</option>
-              <option value="line">Line</option>
+              <option value="severity">{t('review.detail.sort.severity')}</option>
+              <option value="file">{t('review.detail.sort.file')}</option>
+              <option value="line">{t('review.detail.sort.line')}</option>
             </select>
             <select className="border rounded p-1" value={sortDir} onChange={(e) => setSortDir(e.target.value)}>
-              <option value="desc">Desc</option>
-              <option value="asc">Asc</option>
+              <option value="desc">{t('review.detail.sort.desc')}</option>
+              <option value="asc">{t('review.detail.sort.asc')}</option>
             </select>
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold">Findings</h2>
+            <h2 className="text-xl font-semibold">{t('review.detail.findings')}</h2>
             {findings.length === 0 ? (
-              <div className="mt-2 text-black">No findings.</div>
+              <div className="mt-2 text-black">{t('review.detail.noFindings')}</div>
             ) : (
               <ul className="mt-3 space-y-3">
                 {findings.map((f, idx) => {
@@ -131,14 +140,14 @@ export default function ReviewDetailPage() {
                   return (
                   <li key={findingKey} className="border rounded p-3">
                     <div className="flex items-center justify-between">
-                      <div className="font-medium">{f.title || "Issue"}</div>
+                      <div className="font-medium">{f.title || t('review.detail.issue')}</div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-1 rounded bg-gray-200">{f.severity || "info"}</span>
+                        <span className="text-xs px-2 py-1 rounded bg-gray-200">{severityLabel(f.severity)}</span>
                         {(() => {
                           const state = commentsByFinding[f.id]?.status || 'open';
                           return (
                             <span className={`text-xs px-2 py-1 rounded ${state==='resolved' ? 'bg-green-200 text-green-900' : 'bg-yellow-100 text-yellow-900'}`}>
-                              {state === 'resolved' ? 'resolved' : 'open'}
+                              {state === 'resolved' ? t('review.detail.status.resolved') : t('review.detail.status.open')}
                             </span>
                           );
                         })()}
@@ -155,7 +164,7 @@ export default function ReviewDetailPage() {
                                     setCommentsByFinding((prev) => ({ ...prev, [f.id]: { ...(prev[f.id]||{comments:[]}), status: d.status || 'open' } }));
                                   } catch (e) { alert(`Failed to reopen: ${String(e?.message || e)}`); }
                                 }}
-                              >Reopen</button>
+                              >{t('review.detail.action.reopen')}</button>
                             );
                           }
                           return (
@@ -167,7 +176,7 @@ export default function ReviewDetailPage() {
                                   setCommentsByFinding((prev) => ({ ...prev, [f.id]: { ...(prev[f.id]||{comments:[]}), status: d.status || 'open' } }));
                                 } catch (e) { alert(`Failed to resolve: ${String(e?.message || e)}`); }
                               }}
-                            >Mark as resolved</button>
+                            >{t('review.detail.action.resolve')}</button>
                           );
                         })() : null}
                       </div>
@@ -177,11 +186,11 @@ export default function ReviewDetailPage() {
                     {f.recommendation && <pre className="mt-2 bg-gray-50 p-2 overflow-auto text-xs">{f.recommendation}</pre>}
                     {f.fixPatch && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-sm">Suggested patch</summary>
+                        <summary className="cursor-pointer text-sm">{t('review.detail.suggestedPatch')}</summary>
                         <pre className="bg-gray-50 p-2 overflow-auto text-xs">{f.fixPatch}</pre>
                       </details>
                     )}
-                    {typeof f.effortHours === "number" && <div className="mt-2 text-xs">Estimated effort: {f.effortHours}h</div>}
+                    {typeof f.effortHours === "number" && <div className="mt-2 text-xs">{t('review.detail.estimatedEffort', { hours: f.effortHours })}</div>}
 
                     {/* Comments section */}
                     <details className="mt-3 group" onToggle={async (e) => {
@@ -195,9 +204,9 @@ export default function ReviewDetailPage() {
                         }
                       }
                     }}>
-                      <summary className="cursor-pointer text-sm border border-gray-300">Comments</summary>
+                      <summary className="cursor-pointer text-sm border border-gray-300">{t('review.detail.comments')}</summary>
                       <div className="mt-2 space-y-2">
-                        {commentsByFinding[f.id]?.loading && <div className="text-sm">Loading comments…</div>}
+                        {commentsByFinding[f.id]?.loading && <div className="text-sm">{t('review.detail.loadingComments')}</div>}
                         {commentsByFinding[f.id]?.error && <div className="text-sm text-red-600">{commentsByFinding[f.id]?.error}</div>}
                         <CommentInput
                           value={newCommentText[f.id] || ''}
@@ -224,11 +233,11 @@ export default function ReviewDetailPage() {
                             user_id: c.user_id,
                             createdAt: c.createdAt,
                             // Normalize to .message expected by CommentList
-                            message: c.text || (c.action === 'resolve' ? 'Marked as resolved' : c.action === 'reopen' ? 'Reopened' : ''),
+                            message: c.text || (c.action === 'resolve' ? t('review.detail.comment.resolved') : c.action === 'reopen' ? t('review.detail.comment.reopened') : ''),
                             author: c.author || null,
                           }))}
-                          language="en"
-                          // t is optional in component; omit to use defaults
+                          language={language}
+                          t={t}
                           currentUserId={undefined}
                           resourceOwnerId={undefined}
                         />
