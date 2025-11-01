@@ -192,7 +192,7 @@ export default function ReviewDetailPage() {
                         <pre className="bg-gray-50 p-2 overflow-auto text-xs">{f.fixPatch}</pre>
                       </details>
                     )}
-                    {typeof f.effortHours === "number" && <div className="mt-2 text-xs">{t('review.detail.estimatedEffort', { hours: f.effortHours })}</div>}
+                    {typeof f.effortHours === "number" && <div className="mt-2 text-xs">{t('review.detail.estimatedEffort')} {f.effortHours} h </div>}
 
                     {/* Comments section */}
                     <details className="mt-3 group" onToggle={async (e) => {

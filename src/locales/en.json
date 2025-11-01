@@ -319,7 +319,7 @@
   "review.detail.findings": "Findings",
   "review.detail.noFindings": "No findings.",
   "review.detail.suggestedPatch": "Suggested patch",
-  "review.detail.estimatedEffort": "Estimated effort: {{hours}}h",
+  "review.detail.estimatedEffort": "Estimated effort:h",
   "review.detail.comments": "Comments",
   "review.detail.loadingComments": "Loading comments…",
   "review.detail.status.open": "open",

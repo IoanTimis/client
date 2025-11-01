@@ -321,7 +321,7 @@
   "review.detail.findings": "Constatări",
   "review.detail.noFindings": "Nicio constatare.",
   "review.detail.suggestedPatch": "Patch sugerat",
-  "review.detail.estimatedEffort": "Efort estimat: {{hours}}h",
+  "review.detail.estimatedEffort": "Efort estimat:",
   "review.detail.comments": "Comentarii",
   "review.detail.loadingComments": "Se încarcă comentariile…",
   "review.detail.status.open": "deschis",
