@@ -31,7 +31,7 @@ function getNavItems(role, authenticated) {
 	const common = [
 		{ href: "/about", label: "About", icon: InformationCircleIcon },
 		{ href: "/contact", label: "Contact", icon: PhoneIcon },
-		{ href: "/resources", label: "Resources", icon: ShoppingCartIcon },
+		
 	];
 	return common;
 }
@@ -108,10 +108,6 @@ export default function NavBar({ user, onLogout }) {
 								{user?.name ?? t('nav.myAccount')}
 							</DropdownTrigger>
 							<DropdownContent>
-								<DropdownItem className={"hover:text-blue-400"} href="/user/profile">{t('nav.profile')}</DropdownItem>
-								{role === "vendor" && (
-									<DropdownItem className={"hover:text-blue-400"} href="/user/dashboard">{t('nav.dashboard')}</DropdownItem>
-								)}
 								<DropdownItem className={"hover:text-blue-400"} href="/user/review">{t('nav.review')}</DropdownItem>
 								{role === "admin" && (
 									<DropdownItem className={"hover:text-blue-400"} href="/admin">{t('nav.admin')}</DropdownItem>
