@@ -2,9 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import api from "@/lib/api/api";
 
 export default function ReviewPage() {
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082";
+  const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState(null);
   const [error, setError] = React.useState("");
@@ -12,48 +14,43 @@ export default function ReviewPage() {
   const [reviewId, setReviewId] = React.useState(null);
   const [saved, setSaved] = React.useState([]);
 
-  async function fetchJson(path, { method = "GET", body, timeoutMs, retry = 1 } = {}) {
-    const toMs = typeof timeoutMs === 'number' ? timeoutMs : 90000; // default 90s to allow LLM to respond
+  async function fetchJson(path, { method = "GET", body, timeoutMs = 90000, retry = 1 } = {}) {
     let lastErr;
     for (let attempt = 0; attempt <= retry; attempt++) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort('timeout'), toMs);
       try {
-        const res = await fetch(`${API}${path}`, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: body ? JSON.stringify(body) : undefined,
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
-        }
-        return await res.json();
+        const config = { timeout: timeoutMs };
+        let res;
+        if (method === "GET") res = await api.get(path, config);
+        else if (method === "POST") res = await api.post(path, body || {}, config);
+        else if (method === "PUT") res = await api.put(path, body || {}, config);
+        else if (method === "DELETE") res = await api.delete(path, config);
+        else res = await api.request({ url: path, method, data: body, ...config });
+        return res.data;
       } catch (e) {
         lastErr = e;
+        const status = e?.response?.status;
+        if (status === 401 || status === 403) {
+          const next = "/user/review";
+          router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
+          throw e;
+        }
+        // retry on timeout or network errors if configured
         const msg = String(e?.message || e);
-        const isAbort = e?.name === 'AbortError' || /aborted/i.test(msg) || /timeout/i.test(msg);
-        if (isAbort && attempt < retry) {
-          // brief backoff
+        const isTimeout = /timeout/i.test(msg);
+        if (isTimeout && attempt < retry) {
           await new Promise(r => setTimeout(r, 500));
           continue;
         }
-        if (isAbort) {
-          throw new Error(`Request to ${path} timed out after ${Math.round(toMs/1000)}s. The local AI model may still be loading. You can try again or increase the timeout.`);
-        }
         throw e;
-      } finally {
-        clearTimeout(id);
       }
     }
-    throw lastErr || new Error('Unknown fetch error');
+    throw lastErr || new Error('Unknown request error');
   }
 
   const runStaged = async () => {
     setLoading(true); setError("");
     try {
-  const data = await fetchJson(`/review/staged`, { method: "POST", body: {}, timeoutMs: 120000, retry: 1 });
+      const data = await fetchJson(`/review/staged`, { method: "POST", body: {}, timeoutMs: 120000, retry: 1 });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -64,7 +61,7 @@ export default function ReviewPage() {
   const runRepoSample = async () => {
     setLoading(true); setError("");
     try {
-  const data = await fetchJson(`/review/repo`, { method: "POST", body: {}, timeoutMs: 120000, retry: 1 });
+      const data = await fetchJson(`/review/repo`, { method: "POST", body: {}, timeoutMs: 120000, retry: 1 });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -76,7 +73,7 @@ export default function ReviewPage() {
     setLoading(true); setError("");
     try {
       const payloadFiles = await Promise.all(Array.from(files).map(async (f) => ({ path: f.name, content: await f.text() })));
-  const data = await fetchJson(`/review/analyze`, { method: "POST", body: { files: payloadFiles, guidelines: guidelines || undefined }, timeoutMs: 120000, retry: 1 });
+      const data = await fetchJson(`/review/analyze`, { method: "POST", body: { files: payloadFiles, guidelines: guidelines || undefined }, timeoutMs: 120000, retry: 1 });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -97,7 +94,7 @@ export default function ReviewPage() {
   const loadReviewById = async (id) => {
     setLoading(true); setError("");
     try {
-  const data = await fetchJson(`/review/${id}`, { timeoutMs: 20000 });
+      const data = await fetchJson(`/review/${id}`, { timeoutMs: 20000 });
       setResult({ findings: data.findings || [], meta: data.meta || {} });
       setReviewId(id);
     } catch (e) {

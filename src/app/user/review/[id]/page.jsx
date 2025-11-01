@@ -2,14 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import api from "@/lib/api/api";
 
 function severityRank(s) {
   return s === "error" ? 3 : s === "warn" ? 2 : 1;
 }
 
 export default function ReviewDetailPage() {
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082";
+  const router = useRouter();
   const { id } = useParams();
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
@@ -18,14 +19,16 @@ export default function ReviewDetailPage() {
   const [sortDir, setSortDir] = React.useState("desc"); // asc | desc
 
   async function fetchJson(path) {
-    const controller = new AbortController();
-    const to = setTimeout(() => controller.abort(), 30000);
     try {
-      const res = await fetch(`${API}${path}`, { signal: controller.signal });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } finally {
-      clearTimeout(to);
+      const res = await api.get(path, { timeout: 30000 });
+      return res.data;
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 401 || status === 403) {
+        const next = `/user/review/${id}`;
+        router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
+      }
+      throw e;
     }
   }
 
@@ -42,7 +45,7 @@ export default function ReviewDetailPage() {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, router]);
 
   const findings = React.useMemo(() => {
     if (!data?.findings) return [];
