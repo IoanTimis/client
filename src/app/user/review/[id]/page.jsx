@@ -2,14 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 function severityRank(s) {
   return s === "error" ? 3 : s === "warn" ? 2 : 1;
 }
 
-export default function ReviewDetailPage({ params }) {
+export default function ReviewDetailPage() {
   const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082";
-  const id = params?.id;
+  const { id } = useParams();
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [data, setData] = React.useState(null);
