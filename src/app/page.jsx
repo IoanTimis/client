@@ -26,10 +26,8 @@ export default function Home() {
       <Section className="bg-white md:hidden">
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-wider text-black">{t('home.welcome')}</p>
-          <h1 className="text-3xl font-bold tracking-tight">Lorem ipsum dolor sit amet</h1>
-          <p className="text-black">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at nibh non elit dignissim fringilla.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('home.headline')}</h1>
+          <p className="text-black">{t('home.sub')}</p>
           <div className="mt-2">
             <SubNavSearchBar
               value={q}
@@ -47,10 +45,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
             <p className="text-xs uppercase tracking-wider text-black">{t('home.welcome')}</p>
-            <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Lorem ipsum dolor sit amet</h1>
-            <p className="mt-3 text-black">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at nibh non elit dignissim fringilla.
-            </p>
+            <h1 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight">{t('home.headline')}</h1>
+            <p className="mt-3 text-black">{t('home.sub')}</p>
             <div className="mt-5 flex gap-3">
               <SubNavSearchBar
                 value={q}
@@ -75,18 +71,18 @@ export default function Home() {
       <Section className="bg-stone-100 rounded-2xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <FeatureCard
-            title="Lorem ipsum"
-            description="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            title={t('home.features.fast')}
+            description={t('home.features.fastDesc')}
             icon={RocketLaunchIcon}
           />
           <FeatureCard
-            title="Dolor sit amet"
-            description="Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+            title={t('home.features.ui')}
+            description={t('home.features.uiDesc')}
             icon={SparklesIcon}
           />
           <FeatureCard
-            title="Consectetur adipiscing"
-            description="Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."
+            title={t('home.features.secure')}
+            description={t('home.features.secureDesc')}
             icon={ShieldCheckIcon}
           />
         </div>
@@ -101,7 +97,7 @@ export default function Home() {
               <p className="mt-1 text-gray-700">{t('home.cta.desc')}</p>
             </div>
             <div className="flex gap-3">
-              <Link href="/about" className="inline-flex items-center rounded-md bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:opacity-90">{t('home.cta.explore')}</Link>
+              <Link href="/review" className="inline-flex items-center rounded-md bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:opacity-90">{t('home.cta.explore')}</Link>
               <Link href="/contact" className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-stone-200">{t('home.cta.contactUs')}</Link>
             </div>
           </div>

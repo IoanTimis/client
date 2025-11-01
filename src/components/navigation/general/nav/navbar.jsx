@@ -112,6 +112,7 @@ export default function NavBar({ user, onLogout }) {
 								{role === "vendor" && (
 									<DropdownItem className={"hover:text-blue-400"} href="/user/dashboard">{t('nav.dashboard')}</DropdownItem>
 								)}
+								<DropdownItem className={"hover:text-blue-400"} href="/user/review">{t('nav.review')}</DropdownItem>
 								{role === "admin" && (
 									<DropdownItem className={"hover:text-blue-400"} href="/admin">{t('nav.admin')}</DropdownItem>
 								)}

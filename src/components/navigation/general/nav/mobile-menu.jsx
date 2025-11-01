@@ -56,6 +56,7 @@ export default function MobileMenu({ open, onClose, items, isActive, authenticat
               {role === "vendor" && (
               <ALink href="/user/dashboard" underline={false} onClick={onClose} className="text-sm px-3 py-2 rounded-md hover:bg-white/10 text-white">{t('nav.dashboard')}</ALink>
               )}
+              <ALink href="/user/review" underline={false} onClick={onClose} className="text-sm px-3 py-2 rounded-md hover:bg-white/10 text-white">{t('nav.review')}</ALink>
               {role === "admin" && (
               <ALink href="/admin" underline={false} onClick={onClose} className="text-sm px-3 py-2 rounded-md hover:bg-white/10 text-white">{t('nav.admin')}</ALink>
               )}
