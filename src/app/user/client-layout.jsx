@@ -6,8 +6,8 @@ import { useLanguage } from "@/context/language-context";
 
 export default function ClientLayout({ children }) {
 	const pathname = usePathname();
-	const isVendorDetail = /^\/user\/dashboard\/[^/]+$/.test(pathname || "");
-	const isVendorBase = pathname === '/user/dashboard';
+	const isVendorDetail = /^\/user\/review\/[^/]+$/.test(pathname || "");
+	const isVendorBase = pathname === '/user/review';
 	const { t } = useLanguage();
 	const items = [
         { href: "/user/profile", label: t('account.myProfile') },

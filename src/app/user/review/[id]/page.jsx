@@ -68,7 +68,7 @@ export default function ReviewDetailPage({ params }) {
     <div className="min-h-screen p-6 max-w-6xl mx-auto text-black">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Review #{id}</h1>
-        <Link className="text-blue-600 underline" href="/review">← Back to Reviews</Link>
+        <Link className="text-blue-600 underline" href="/user/review">← Back to Reviews</Link>
       </div>
 
       {loading && <div className="mt-4">Loading…</div>}
