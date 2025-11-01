@@ -7,6 +7,8 @@ export default function ReviewPage() {
   const [result, setResult] = React.useState(null);
   const [error, setError] = React.useState("");
   const [guidelines, setGuidelines] = React.useState("");
+  const [reviewId, setReviewId] = React.useState(null);
+  const [saved, setSaved] = React.useState([]);
 
   const runStaged = async () => {
     setLoading(true); setError("");
@@ -14,6 +16,7 @@ export default function ReviewPage() {
       const res = await fetch("http://localhost:8082/review/staged", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
       const data = await res.json();
       setResult(data);
+      if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
       setError(String(e?.message || e));
     } finally { setLoading(false); }
@@ -25,6 +28,7 @@ export default function ReviewPage() {
       const res = await fetch("http://localhost:8082/review/repo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
       const data = await res.json();
       setResult(data);
+      if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
       setError(String(e?.message || e));
     } finally { setLoading(false); }
@@ -37,6 +41,30 @@ export default function ReviewPage() {
       const res = await fetch("http://localhost:8082/review/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ files: payloadFiles, guidelines: guidelines || undefined }) });
       const data = await res.json();
       setResult(data);
+      if (data.reviewId) setReviewId(data.reviewId);
+    } catch (e) {
+      setError(String(e?.message || e));
+    } finally { setLoading(false); }
+  };
+
+  const loadLatestReviews = async () => {
+    setError("");
+    try {
+      const res = await fetch("http://localhost:8082/review/latest");
+      const data = await res.json();
+      setSaved(data.reviews || []);
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+  };
+
+  const loadReviewById = async (id) => {
+    setLoading(true); setError("");
+    try {
+      const res = await fetch(`http://localhost:8082/review/${id}`);
+      const data = await res.json();
+      setResult({ findings: data.findings || [], meta: data.meta || {} });
+      setReviewId(id);
     } catch (e) {
       setError(String(e?.message || e));
     } finally { setLoading(false); }
@@ -69,14 +97,31 @@ export default function ReviewPage() {
         </div>
       </div>
 
-      <div className="mt-6">
-        <h3 className="font-semibold">Guidelines (optional)</h3>
-        <textarea
-          className="mt-2 w-full border rounded p-2 h-32"
-          placeholder="Paste custom rules here (otherwise defaults are used)."
-          value={guidelines}
-          onChange={(e) => setGuidelines(e.target.value)}
-        />
+      <div className="mt-6 grid md:grid-cols-3 gap-4">
+        <div className="border rounded p-4">
+          <h2 className="font-semibold">Saved reviews</h2>
+          <button className="mt-3 bg-gray-800 text-white px-3 py-2 rounded" onClick={loadLatestReviews} disabled={loading}>Load latest</button>
+          <ul className="mt-3 space-y-2 max-h-64 overflow-auto text-sm">
+            {saved.map((r) => (
+              <li key={r.id} className="flex items-center justify-between">
+                <button className="underline" onClick={() => loadReviewById(r.id)}>#{r.id} · {r.scope || 'n/a'}</button>
+                <span className="text-xs">{r.findings} findings</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="md:col-span-2 border rounded p-4">
+          <h2 className="font-semibold">Guidelines (optional)</h2>
+          <textarea
+            className="mt-2 w-full border rounded p-2 h-32"
+            placeholder="Paste custom rules here (otherwise defaults are used)."
+            value={guidelines}
+            onChange={(e) => setGuidelines(e.target.value)}
+          />
+          {reviewId && (
+            <div className="mt-3 text-sm">Saved as review <span className="font-mono">#{reviewId}</span></div>
+          )}
+        </div>
       </div>
 
       {error && <div className="mt-4 text-red-600">{error}</div>}
