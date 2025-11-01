@@ -79,7 +79,7 @@ export default function ReviewPage() {
   const loadReviewById = async (id) => {
     setLoading(true); setError("");
     try {
-      const data = await fetchJson(`/review/${id}`);
+      const data = await fetchJson(`/user/review/${id}`);
       setResult({ findings: data.findings || [], meta: data.meta || {} });
       setReviewId(id);
     } catch (e) {
@@ -123,7 +123,7 @@ export default function ReviewPage() {
               <li key={r.id} className="flex items-center justify-between">
                 <div className="space-x-2">
                   <button className="underline" onClick={() => loadReviewById(r.id)}>#{r.id} · {r.scope || 'n/a'}</button>
-                  <Link className="text-blue-600 underline" href={`/review/${r.id}`}>open</Link>
+                  <Link className="text-blue-600 underline" href={`/user/review/${r.id}`}>open</Link>
                 </div>
                 <span className="text-xs">{r.findings} findings</span>
               </li>
