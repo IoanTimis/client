@@ -15,9 +15,9 @@ export async function middleware(req: NextRequest) {
   // Protect /user/* routes
   if (pathname.startsWith('/user')) {
     // Public exception: allow open access to review pages
-    if (pathname === '/user/review' || pathname.startsWith('/user/review/')) {
-      return NextResponse.next();
-    }
+    // if (pathname === '/user/review' || pathname.startsWith('/user/review/')) {
+    //   return NextResponse.next();
+    // }
     if (!hasAuthCookie) {
       const url = req.nextUrl.clone();
       url.pathname = '/auth/login';

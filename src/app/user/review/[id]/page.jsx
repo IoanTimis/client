@@ -7,12 +7,14 @@ import api from "@/lib/api/api";
 import CommentInput from "@/components/ui/general/comments/comment-input";
 import CommentList from "@/components/ui/general/comments/comment-list";
 import { useLanguage } from "@/context/language-context";
+import { useSelector } from "react-redux";
 
 function severityRank(s) {
   return s === "error" ? 3 : s === "warn" ? 2 : 1;
 }
 
 export default function ReviewDetailPage() {
+  const user = useSelector((state) => state.user.info);
   const router = useRouter();
   const { id } = useParams();
   const { t, language } = useLanguage();
@@ -23,12 +25,10 @@ export default function ReviewDetailPage() {
   const [sortDir, setSortDir] = React.useState("desc"); // asc | desc
   const [commentsByFinding, setCommentsByFinding] = React.useState({}); // { [findingId]: { loading, error, comments: [], status: 'open'|'resolved' } }
   const [newCommentText, setNewCommentText] = React.useState({}); // { [findingId]: string }
+  // Determine authentication status from Redux user state instead of cookies
   const isLogged = React.useMemo(() => {
-    if (typeof document === 'undefined') return false;
-    try {
-      return /(?:^|; )(?:accessToken|refreshToken|auth|session)=/.test(document.cookie || '');
-    } catch (_) { return false; }
-  }, []);
+    return !!(user && (user.id || user._id || user.email));
+  }, [user]);
 
   async function fetchJson(path, { method = "GET", body, timeoutMs = 30000, retry = 0 } = {}) {
     let lastErr;
@@ -212,10 +212,15 @@ export default function ReviewDetailPage() {
                         {commentsByFinding[f.id]?.error && <div className="text-sm text-red-600">{commentsByFinding[f.id]?.error}</div>}
                         <CommentInput
                           value={newCommentText[f.id] || ''}
-                          disabled={false}
+                          disabled={!isLogged}
                           onSubmit={async () => {
                             const text = (newCommentText[f.id] || '').trim();
                             if (!text) return;
+                            if (!isLogged) {
+                              const next = `/user/review/${id}`;
+                              router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
+                              return;
+                            }
                             try {
                               const row = await fetchJson(`/review/finding/${f.id}/comments`, { method: 'POST', body: { text }, timeoutMs: 20000 });
                               setCommentsByFinding((prev) => {
@@ -224,6 +229,12 @@ export default function ReviewDetailPage() {
                               });
                               setNewCommentText((prev) => ({ ...prev, [f.id]: '' }));
                             } catch (e) {
+                              const status = e?.response?.status;
+                              if (status === 401 || status === 403) {
+                                const next = `/user/review/${id}`;
+                                router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
+                                return;
+                              }
                               alert(`Failed to add comment: ${String(e?.message || e)}`);
                             }
                           }}
@@ -240,9 +251,12 @@ export default function ReviewDetailPage() {
                           }))}
                           language={language}
                           t={t}
-                          currentUserId={undefined}
+                          currentUserId={user?.id || user?._id || undefined}
                           resourceOwnerId={undefined}
                         />
+                        {!isLogged && (
+                          <div className="text-xs text-gray-600">{t('auth.loginToComment') || 'Please log in to comment.'}</div>
+                        )}
                         
                       </div>
                     </details>
