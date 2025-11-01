@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Adaugă produs">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0f14"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#1f2937" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <!-- outer rounded card -->
+  <rect x="0.5" y="0.5" width="1279" height="719" rx="28.8" ry="28.8" fill="url(#bg)" stroke="#1f2937" stroke-width="1"/>
+  <!-- inner subtle grid -->
+  <rect x="28.8" y="28.8" width="1222.4" height="662.4" rx="17.28" ry="17.28" fill="url(#grid)" opacity="0.25"/>
+  <!-- Plus in circle -->
+  <g transform="translate(640, 360)">
+    <circle cx="0" cy="0" r="120" fill="none" stroke="#cbd5e1" stroke-width="20"/>
+    <line x1="0" y1="-78" x2="0" y2="78" stroke="#cbd5e1" stroke-width="20" stroke-linecap="round"/>
+    <line x1="-78" y1="0" x2="78" y2="0" stroke="#cbd5e1" stroke-width="20" stroke-linecap="round"/>
+  </g>
+  <text x="50%" y="576" text-anchor="middle"
+    font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial"
+    font-size="43.2" fill="#94a3b8">Adaugă produs</text>
+</svg>
