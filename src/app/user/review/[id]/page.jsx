@@ -142,6 +142,34 @@ export default function ReviewDetailPage() {
                             </span>
                           );
                         })()}
+                        {f.id ? (() => {
+                          const state = commentsByFinding[f.id]?.status || 'open';
+                          const commonCls = "text-xs px-2 py-1 rounded border";
+                          if (state === 'resolved') {
+                            return (
+                              <button
+                                className={commonCls}
+                                onClick={async () => {
+                                  try {
+                                    const d = await fetchJson(`/review/finding/${f.id}/reopen`, { method: 'POST', body: {}, timeoutMs: 15000 });
+                                    setCommentsByFinding((prev) => ({ ...prev, [f.id]: { ...(prev[f.id]||{comments:[]}), status: d.status || 'open' } }));
+                                  } catch (e) { alert(`Failed to reopen: ${String(e?.message || e)}`); }
+                                }}
+                              >Reopen</button>
+                            );
+                          }
+                          return (
+                            <button
+                              className={commonCls}
+                              onClick={async () => {
+                                try {
+                                  const d = await fetchJson(`/review/finding/${f.id}/resolve`, { method: 'POST', body: {}, timeoutMs: 15000 });
+                                  setCommentsByFinding((prev) => ({ ...prev, [f.id]: { ...(prev[f.id]||{comments:[]}), status: d.status || 'open' } }));
+                                } catch (e) { alert(`Failed to resolve: ${String(e?.message || e)}`); }
+                              }}
+                            >Mark as resolved</button>
+                          );
+                        })() : null}
                       </div>
                     </div>
                     <div className="text-sm text-black mt-1">{f.description}</div>
@@ -167,7 +195,6 @@ export default function ReviewDetailPage() {
                         }
                       }
                     }}>
-                      <div></div>
                       <summary className="cursor-pointer text-sm border border-gray-300">Comments</summary>
                       <div className="mt-2 space-y-2">
                         {commentsByFinding[f.id]?.loading && <div className="text-sm">Loading comments…</div>}
@@ -205,35 +232,7 @@ export default function ReviewDetailPage() {
                           currentUserId={undefined}
                           resourceOwnerId={undefined}
                         />
-                        <div className="flex gap-2">
-                          {(() => {
-                            const status = commentsByFinding[f.id]?.status || 'open';
-                            if (status === 'resolved') {
-                              return (
-                                <button
-                                  className="text-sm px-3 py-1 rounded border"
-                                  onClick={async () => {
-                                    try {
-                                      const d = await fetchJson(`/review/finding/${f.id}/reopen`, { method: 'POST', body: {}, timeoutMs: 15000 });
-                                      setCommentsByFinding((prev) => ({ ...prev, [f.id]: { ...(prev[f.id]||{}), status: d.status || 'open' } }));
-                                    } catch (e) { alert(`Failed to reopen: ${String(e?.message || e)}`); }
-                                  }}
-                                >Reopen</button>
-                              );
-                            }
-                            return (
-                              <button
-                                className="text-sm px-3 py-1 rounded border"
-                                onClick={async () => {
-                                  try {
-                                    const d = await fetchJson(`/review/finding/${f.id}/resolve`, { method: 'POST', body: {}, timeoutMs: 15000 });
-                                    setCommentsByFinding((prev) => ({ ...prev, [f.id]: { ...(prev[f.id]||{}), status: d.status || 'open' } }));
-                                  } catch (e) { alert(`Failed to resolve: ${String(e?.message || e)}`); }
-                                }}
-                              >Mark as resolved</button>
-                            );
-                          })()}
-                        </div>
+                        
                       </div>
                     </details>
                   </li>
