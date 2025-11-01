@@ -11,15 +11,6 @@ export async function middleware(req: NextRequest) {
       req.cookies.get('auth')?.value ||
       req.cookies.get('session')?.value
   );
-  console.log('Middleware invoked for:', pathname);
-  console.log('Auth cookies present:', hasAuthCookie);
-  // console.log('Cookies:', req.cookies);
-
-  console.log(req.cookies.get('accessToken')?.value);
-  console.log(req.cookies.get('accessToken'));
-  console.log(req.cookies.get('refreshToken')?.value);
-  console.log(req.cookies.get('refreshToken'));
-  console.log(req.cookies.getAll());
 
   // Protect /user/* routes
   if (pathname.startsWith('/user')) {
