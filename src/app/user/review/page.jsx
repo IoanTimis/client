@@ -31,11 +31,8 @@ export default function ReviewPage() {
       } catch (e) {
         lastErr = e;
         const status = e?.response?.status;
-        if (status === 401 || status === 403) {
-          const next = "/user/review";
-          router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
-          throw e;
-        }
+        // Public page: don't auto-redirect on auth errors; surface error instead
+        if (status === 401 || status === 403) throw e;
         // retry on timeout or network errors if configured
         const msg = String(e?.message || e);
         const isTimeout = /timeout/i.test(msg);

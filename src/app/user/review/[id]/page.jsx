@@ -23,6 +23,12 @@ export default function ReviewDetailPage() {
   const [sortDir, setSortDir] = React.useState("desc"); // asc | desc
   const [commentsByFinding, setCommentsByFinding] = React.useState({}); // { [findingId]: { loading, error, comments: [], status: 'open'|'resolved' } }
   const [newCommentText, setNewCommentText] = React.useState({}); // { [findingId]: string }
+  const isLogged = React.useMemo(() => {
+    if (typeof document === 'undefined') return false;
+    try {
+      return /(?:^|; )(?:accessToken|refreshToken|auth|session)=/.test(document.cookie || '');
+    } catch (_) { return false; }
+  }, []);
 
   async function fetchJson(path, { method = "GET", body, timeoutMs = 30000, retry = 0 } = {}) {
     let lastErr;
@@ -39,11 +45,7 @@ export default function ReviewDetailPage() {
       } catch (e) {
         lastErr = e;
         const status = e?.response?.status;
-        if (status === 401 || status === 403) {
-          const next = `/user/review/${id}`;
-          router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
-          throw e;
-        }
+        if (status === 401 || status === 403) throw e;
         const msg = String(e?.message || e);
         const isTimeout = /timeout/i.test(msg);
         if (isTimeout && attempt < retry) {
@@ -151,7 +153,7 @@ export default function ReviewDetailPage() {
                             </span>
                           );
                         })()}
-                        {f.id ? (() => {
+                        {isLogged && f.id ? (() => {
                           const state = commentsByFinding[f.id]?.status || 'open';
                           const commonCls = "text-xs px-2 py-1 rounded border";
                           if (state === 'resolved') {
@@ -210,7 +212,7 @@ export default function ReviewDetailPage() {
                         {commentsByFinding[f.id]?.error && <div className="text-sm text-red-600">{commentsByFinding[f.id]?.error}</div>}
                         <CommentInput
                           value={newCommentText[f.id] || ''}
-                          disabled={false}
+                          disabled={!isLogged}
                           onSubmit={async () => {
                             const text = (newCommentText[f.id] || '').trim();
                             if (!text) return;
