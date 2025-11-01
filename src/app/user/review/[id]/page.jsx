@@ -212,7 +212,7 @@ export default function ReviewDetailPage() {
                         {commentsByFinding[f.id]?.error && <div className="text-sm text-red-600">{commentsByFinding[f.id]?.error}</div>}
                         <CommentInput
                           value={newCommentText[f.id] || ''}
-                          disabled={!isLogged}
+                          disabled={false}
                           onSubmit={async () => {
                             const text = (newCommentText[f.id] || '').trim();
                             if (!text) return;
