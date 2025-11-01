@@ -12,30 +12,48 @@ export default function ReviewPage() {
   const [reviewId, setReviewId] = React.useState(null);
   const [saved, setSaved] = React.useState([]);
 
-  async function fetchJson(path, { method = "GET", body } = {}) {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 30000);
-    try {
-      const res = await fetch(`${API}${path}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : undefined,
-        signal: controller.signal,
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+  async function fetchJson(path, { method = "GET", body, timeoutMs, retry = 1 } = {}) {
+    const toMs = typeof timeoutMs === 'number' ? timeoutMs : 90000; // default 90s to allow LLM to respond
+    let lastErr;
+    for (let attempt = 0; attempt <= retry; attempt++) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort('timeout'), toMs);
+      try {
+        const res = await fetch(`${API}${path}`, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}: ${text?.slice(0,200)}`);
+        }
+        return await res.json();
+      } catch (e) {
+        lastErr = e;
+        const msg = String(e?.message || e);
+        const isAbort = e?.name === 'AbortError' || /aborted/i.test(msg) || /timeout/i.test(msg);
+        if (isAbort && attempt < retry) {
+          // brief backoff
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        if (isAbort) {
+          throw new Error(`Request to ${path} timed out after ${Math.round(toMs/1000)}s. The local AI model may still be loading. You can try again or increase the timeout.`);
+        }
+        throw e;
+      } finally {
+        clearTimeout(id);
       }
-      return await res.json();
-    } finally {
-      clearTimeout(id);
     }
+    throw lastErr || new Error('Unknown fetch error');
   }
 
   const runStaged = async () => {
     setLoading(true); setError("");
     try {
-      const data = await fetchJson(`/review/staged`, { method: "POST", body: {} });
+  const data = await fetchJson(`/review/staged`, { method: "POST", body: {}, timeoutMs: 120000, retry: 1 });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -46,7 +64,7 @@ export default function ReviewPage() {
   const runRepoSample = async () => {
     setLoading(true); setError("");
     try {
-      const data = await fetchJson(`/review/repo`, { method: "POST", body: {} });
+  const data = await fetchJson(`/review/repo`, { method: "POST", body: {}, timeoutMs: 120000, retry: 1 });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -58,7 +76,7 @@ export default function ReviewPage() {
     setLoading(true); setError("");
     try {
       const payloadFiles = await Promise.all(Array.from(files).map(async (f) => ({ path: f.name, content: await f.text() })));
-      const data = await fetchJson(`/review/analyze`, { method: "POST", body: { files: payloadFiles, guidelines: guidelines || undefined } });
+  const data = await fetchJson(`/review/analyze`, { method: "POST", body: { files: payloadFiles, guidelines: guidelines || undefined }, timeoutMs: 120000, retry: 1 });
       setResult(data);
       if (data.reviewId) setReviewId(data.reviewId);
     } catch (e) {
@@ -69,7 +87,7 @@ export default function ReviewPage() {
   const loadLatestReviews = async () => {
     setError("");
     try {
-      const data = await fetchJson(`/review/latest`);
+      const data = await fetchJson(`/review/latest`, { timeoutMs: 15000 });
       setSaved(data.reviews || []);
     } catch (e) {
       setError(String(e?.message || e));
@@ -79,7 +97,7 @@ export default function ReviewPage() {
   const loadReviewById = async (id) => {
     setLoading(true); setError("");
     try {
-      const data = await fetchJson(`/user/review/${id}`);
+  const data = await fetchJson(`/review/${id}`, { timeoutMs: 20000 });
       setResult({ findings: data.findings || [], meta: data.meta || {} });
       setReviewId(id);
     } catch (e) {
